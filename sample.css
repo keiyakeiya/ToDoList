@@ -165,10 +165,13 @@ input:focus {
   background-color: #56a6d2;
   font-size: 15px;
   color: #fff;
-  text-align: center;
   user-select: none;
   cursor: pointer;
   transition: 1000ms;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
 }
 
 .del {
@@ -177,9 +180,12 @@ input:focus {
   border-radius: 5px;
   background-color: #a7a7a7;
   font-size: 15px;
-  text-align: center;
   user-select: none;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
 }
 
 #addButton {
