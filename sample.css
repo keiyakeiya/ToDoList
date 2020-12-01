@@ -2,6 +2,7 @@ body {
   margin: 0;
   background-color: #dbf3ff;
   font-family: system-ui;
+  overscroll-behavior-y: none;
 }
 
 #header {
