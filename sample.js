@@ -41,7 +41,7 @@ let unit = (n, sT, txt) => {
 let showDate = () => {
   let day = dayTxt[dt.getDay()];
   let dateBox = document.querySelector('#dateBox');
-  dateBox.insertAdjacentHTML('afterbegin', '<span contenteditable="true" id="dateMonth">' + month + '</span>' + '<span>/</span>'+ '<span contenteditable="true" id="dateDate">' + date + '</span>' + '<span id="day" contenteditable="true">&nbsp;' + day + '</span>')
+  dateBox.insertAdjacentHTML('afterbegin', '<span contenteditable="true" id="dateMonth">' + month + '</span>' + '<span>/</span>'+ '<span contenteditable="true" id="dateDate">' + date + '</span>' + '<span id="day">&nbsp;' + day + '</span>')
   dateMonthSpan = document.querySelector('#dateMonth')
   dateDateSpan = document.querySelector('#dateDate')
   let changeDay = (event) => {
@@ -50,8 +50,19 @@ let showDate = () => {
     let daySpan = document.querySelector('#day')
     daySpan.innerHTML = '&nbsp;' + virtualDay;
   };
+	//enter to change
+	let enterchangeDay = (e) => {
+		if (e.keyCode === 13) {
+			changeDay();
+			e.preventDefault();
+		}
+		return false;
+	};
   dateMonthSpan.addEventListener("DOMFocusOut", changeDay ,false);
   dateDateSpan.addEventListener("DOMFocusOut", changeDay ,false);
+	dateMonthSpan.addEventListener("keypress", enterchangeDay ,false);
+  dateDateSpan.addEventListener("keypress", enterchangeDay ,false);
+
 
   //データをもとにリストを復元する関数
   if (recovered) {
