@@ -54,6 +54,7 @@ let showDate = () => {
 	let enterchangeDay = (e) => {
 		if (e.keyCode === 13) {
 			changeDay();
+			e.target.blur();
 			e.preventDefault();
 		}
 		return false;
