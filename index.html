@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <meta name="theme-color" content="#18adff">
+		<link rel="manifest" href="./manifest.json">
+	  <script>
+	    if ('serviceWorker' in navigator) {
+	      navigator.serviceWorker.register('./service-worker.js').then(function() { console.log('Service Worker Registered'); });
+	   }
+	  </script>
     <title>ToDoList</title>
     <link rel="stylesheet" href="sample.css">
     <link href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" rel="stylesheet">
