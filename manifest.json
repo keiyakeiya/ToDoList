@@ -1,0 +1,19 @@
+{
+  "name": "TO Do List",
+  "short_name": "ToDo",
+  "background_color": "#dbf3ff",
+	"theme_color": "#18adff",
+	"description": "You can set a start time and an end time for each task.",
+  "icons": [{
+      "src": "./check_icon_256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },{
+      "src": "./check_icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }],
+  "start_url": "https://yoshinari510.github.io/ToDoList/",
+  "display": "standalone",
+	"orientation":"portrait",
+}
