@@ -1,8 +1,8 @@
 {
-	"name": "TO Do List",
+	"name": "To Do List",
 	"short_name": "ToDo",
-	"background_color": "#dbf3ff",
-	"theme_color": "#18adff",
+	"background_color": "hsl(208, 75%, 80%)",
+	"theme_color": "hsl(208, 75%, 80%)",
 	"description": "You can set a start time and an end time for each task.",
 	"icons": [{
 			"src": "./check_icon_256.png",
