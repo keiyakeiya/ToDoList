@@ -2,10 +2,12 @@ let dt = new Date();
 let month = 1 + dt.getMonth();
 let date = dt.getDate();
 dayTxt = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const button = document.querySelector('#addButton');
+let button = document.querySelector('#addButton');
 const trashButton = document.querySelector('#trash');
 const saveButton = document.querySelector('#save');
 let column = {}; //columnを入れるためのオブジェクト、インデックスはnumber（1スタート）
+let outer = {};
+let input = {};
 let number = null;
 let startTime = '00:00';
 let doneJudge = {};  //tureは未チェック
@@ -25,15 +27,37 @@ class unitData {
    }
 }
 
+//色のセット
+const lightColor  = 'hsl(208, 75%, 90%)';
+const bgColor     = 'hsl(208, 75%, 80%)';
+const shadowColor = 'hsl(208, 75%, 70%)';
+const txtColor = 'hsl(221, 10%, 18%)';
+const checkColor = 'hsl(208, 97%, 97%)';
+const checkColor2 = 'hsl(208, 55%, 65%)';
+const txtColor2 = 'hsl(221, 10%, 55%)';
+
+//Neumorphism用のシャドウを返す関数
+let convex = (offset, blur =offset*2 , light = lightColor, shadow = shadowColor) => {
+	return `${offset}px ${offset}px ${blur}px ${shadow}, -${offset}px -${offset}px ${blur}px ${light}, inset ${offset}px ${offset}px ${blur}px hsla(208, 75%, 70%, 0), inset -${offset}px -${offset}px ${blur}px hsla(208, 75%, 70%, 0)`;
+};
+let dent = (offset, blur =offset*2 , light = lightColor, shadow = shadowColor) => {
+	return `inset ${offset}px ${offset}px ${blur}px ${shadow}, inset -${offset}px -${offset}px ${blur}px ${light}, ${offset}px ${offset}px ${blur}px hsla(208, 75%, 70%, 0), -${offset}px -${offset}px ${blur}px hsla(208, 75%, 70%, 0)`;
+};
+
 //追加する要素を返す関数　引数は'カウント'、'開始時間'、'columnの内容'
 let unit = (n, sT, txt) => {
   return `<div class="todoUnit" id='todoUnit${n}'>
-      <input type="time" value=${sT} id='input${n}' class='input'>
-      <div contenteditable="true" class="todoColumn"id="column${n}" onfocus='focusWatch()'>${txt}</div>
-      <div class="checkDel">
-        <div class="check" id="check${n}" onclick='check(${n})'><i class="fas fa-check"></i></div>
-        <div class="del" id="del${n}" onclick="delUnit(${n})"><i class="fas fa-minus"></i></div>
-      </div>
+			<div class="innerUnit">
+				<div class="columnOuter" id="outer${n}">
+	      	<div contenteditable="true" class="todoColumn"id="column${n}" onfocus='focusWatch()' onfocusout='deldel()'>${txt}</div>
+					<div class="del" id="del${n}" onclick="delUnit(${n})"><i class="fas fa-times"></i></div>
+				</div>
+				<div class="check" id="check${n}" onclick='check(${n})'><i class="fas fa-check"></i></div>
+			</div>
+			<div class="inputBox">
+				<span class="timeDisplay" id="timeDisplay${n}">${sT}</span>
+				<input type="time" value=${sT} id='input${n}' oninput="timeDisplayFunc(${n})">
+			</div>
     </div>`;
 };
 
@@ -76,18 +100,25 @@ let showDate = () => {
     orderArray = JSON.parse(window.localStorage.getItem('orderArray'));
     unitBoxArray = JSON.parse(window.localStorage.getItem('objects'));
     document.querySelector('#timeStart').value = window.localStorage.getItem('timeStart');
+		timeDisplayFunc(0);
     for (let i of orderArray) {
       unitBox[`todoUnit${i}`] = unitBoxArray[orderArray.findIndex(item => item === i)];
-      button.insertAdjacentHTML('beforebegin', unit(i, unitBox[`todoUnit${i}`].time, unitBox[`todoUnit${i}`].columnTxt));
-      column[i] = document.querySelector(`#column${i}`);
-      doneJudge[i] = !Boolean(unitBox[`todoUnit${i}`].checked);
-      check(i);
+			document.querySelector('#container').insertAdjacentHTML('beforeend', unit(i, unitBox[`todoUnit${i}`].time, unitBox[`todoUnit${i}`].columnTxt))
+			document.querySelector(`#todoUnit${i}`).style.opacity = 0;
+			setTimeout( () => {
+				column[i] = document.querySelector(`#column${i}`);
+				outer[i] = document.querySelector(`#outer${i}`);
+	      doneJudge[i] = !Boolean(unitBox[`todoUnit${i}`].checked);
+	      check(i);
+				document.querySelector(`#todoUnit${i}`).style.opacity = 1;
+			}, (1000/orderArray.length)*orderArray.findIndex(item => item === i));
     }
     number = 1 + orderArray.reduce( (a, b) => {return Math.max(a,b)});
   } else {
     orderArray = [1];
-    button.insertAdjacentHTML('beforebegin', unit(1, '00:00', ''));
+    document.querySelector('#container').insertAdjacentHTML('beforeend', unit(1, '00:00', ''));
     column[1] = document.querySelector('#column1');
+		outer[1] = document.querySelector(`#outer1`);
     doneJudge[1] = true;
     unitBox[`todoUnit${1}`] = new unitData();
     number = 2;
@@ -96,9 +127,27 @@ let showDate = () => {
 
 let focusWatch = () => {
   currentFocusUnit = document.activeElement.closest('.todoUnit');  //focusするたびにcurrentFocusUnitを更新
+	let del = currentFocusUnit.querySelector('.del');
+	setTimeout( () => {
+		del.style.transitionTimingFunction= 'ease-out';
+		del.style.visibility = 'visible';
+		del.style.opacity = 1;
+	}, 250);	//focusしたらそのcolumnのdelを表示
 };
 
-let addTodoUnit = () => {
+let deldel = () => {
+	let del = currentFocusUnit.querySelector('.del');
+	del.style.transitionTimingFunction= 'ease-in';
+	del.style.opacity = 0;
+	setTimeout( () => del.style.visibility = 'hidden' , 250);	//focusoutしたらそのcolumnのdelを非表示
+};
+
+let openMenu = () => {
+	document.querySelector('#dropDown').style.visibility = 'visible';
+};
+
+
+let addTodoUnit = (e) => {
   doneJudge[number] = true;  //numberはidのインデックス。1スタート。現在のカウントは今追加する要素のインデックス
   if (currentFocusUnit !== null) {
     startTime = currentFocusUnit.querySelector('input').value;
@@ -107,40 +156,56 @@ let addTodoUnit = () => {
     let b = orderArray.findIndex(item => item === a);
     orderArray.splice(b+1, 0, number);
   } else {
-    button.insertAdjacentHTML('beforebegin', unit(number, startTime, '')); //buttonの上に新しい要素を追加
+    document.querySelector('#container').insertAdjacentHTML('beforeend', unit(number, startTime, '')); //buttonの上に新しい要素を追加
     orderArray.push(number);
   }
   column[number] = document.querySelector(`#column${number}`);
-  unitBox[`todoUnit${number}`] = new unitData();
-  number++
+	outer[number] = document.querySelector(`#outer${number}`);
+	unitBox[`todoUnit${number}`] = new unitData();
+	let addedUnit = document.querySelector(`#todoUnit${number}`);
+	addedUnit.style.opacity = 0;
+	setTimeout( () => addedUnit.style.opacity = 1, 10);
+	number++
 };
 
 let delUnit = (x) => {
-  if (window.confirm('この項目を削除します')) {
     let targetParent = document.querySelector('#container');
     let target = document.querySelector(`#todoUnit${x}`)
     targetParent.removeChild(target);
     currentFocusUnit = null;
     let index = orderArray.findIndex(item => item === x);
     orderArray.splice(index,1);
-  }
 };
 
 let check = (c) => {
   let checkMark = document.querySelector(`#check${c}`);
   if (doneJudge[c]) {
     column[c].style.textDecoration = 'line-through';
-    column[c].style.backgroundColor = '#dadada';
-    column[c].style.color = '#636363';
-    checkMark.style.backgroundColor = '#005eff';
+		column[c].style.color = txtColor2;
+		outer[c].style.boxShadow = dent(3);
+		outer[c].style.backgroundColor = 'hsl(207, 75%, 77%)';	//-3%
+		checkMark.style.backgroundColor = 'hsl(207, 75%, 77%)';	//-3%
+		checkMark.style.color = checkColor2;
+		checkMark.style.boxShadow = dent(3);
     doneJudge[c] = !doneJudge[c];
   }else{
     column[c].style.textDecoration = 'none';
-    column[c].style.backgroundColor = '#fff';
-    column[c].style.color = '#000000';
-    checkMark.style.backgroundColor = '#56a6d2';
+    column[c].style.color = txtColor;
+		outer[c].style.boxShadow = convex(3);
+		outer[c].style.backgroundColor = 'hsl(207, 75%, 80%)';
+		checkMark.style.backgroundColor = 'hsl(206, 74%, 80%)';
+		checkMark.style.color = checkColor;
+		checkMark.style.boxShadow = convex(3);
     doneJudge[c] = !doneJudge[c];
   }
+};
+
+let timeDisplayFunc = (d) => {
+	if (d === 0) {
+		document.querySelector('#timeStartBox').querySelector('span').innerHTML = document.querySelector('#timeStart').value;
+	} else {
+		document.querySelector(`#timeDisplay${d}`).innerHTML = document.querySelector(`#input${d}`).value;
+	}
 };
 
 let trash = (event) => {
@@ -183,13 +248,17 @@ let save = (event) => {
     recovered = !recovered
   }
   const saved = document.querySelector('#saved');
-  saved.style.visibility = 'visible';
-  saved.style.opacity = 1;
+	const savedTxt = saved.querySelector('div');
+  saved.style.transitionTimingFunction = 'ease-out';
+	saved.style.boxShadow = convex(2);
+	saved.querySelector('div').style.backgroundColor = 'hsl(208, 75%, 84%)';
+	savedTxt.style.opacity = 1;
   setTimeout( () => {
-    saved.style.transitionTimingFunction = 'ease-out';
-    saved.style.opacity = 0;
-  },1000);
-  setTimeout( () => saved.visibility = 'hidden',1500);
+    saved.style.transitionTimingFunction = 'ease-in';
+		saved.style.boxShadow = convex(2, 4, 'hsla(208, 75%, 70%, 0)', 'hsla(206, 74%, 90%, 0)');
+		saved.querySelector('div').style.backgroundColor = bgColor;
+		savedTxt.style.opacity = 0;
+	},1500);
 };
 
 trashButton.addEventListener("click",trash,false);
