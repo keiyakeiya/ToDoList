@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-		<meta name="theme-color" content="#18adff">
+		<meta name="theme-color" content="hsl(208, 75%, 80%)">
 		<link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
 		<link rel="manifest" href="./manifest.json">
 	  <script>
@@ -12,24 +12,31 @@
 	   }
 	  </script>
     <title>ToDoList</title>
-    <link rel="stylesheet" href="sample.css">
     <link href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" rel="stylesheet">
+		<link rel="stylesheet" href="sample.css">
   </head>
   <body onload="showDate()">
     <div id="header">
       <div id="dateBox"></div>
-      <div id="saveDelBox">
-        <div id="trash" class="storageButton"><i class="fas fa-trash"></i></div>
-        <div id="save" class="storageButton"><i class="fas fa-save"></i></div>
-      </div>
     </div>
+		<div id="headerSheet"></div>
     <div id="saved"><div>Saved</div></div>
     <div id="container">
-      <input type="time" value="00:00" id="timeStart">
-      <div id="addButton" onclick="addTodoUnit()">
-				<i class="fas fa-plus"></i>
-      </div>
+			<div id="timeStartBox">
+				<span class="timeDisplay">00:00</span>
+				<input type="time" value="00:00" id="timeStart" oninput="timeDisplayFunc(0)">
+			</div>
     </div>
+		<div id="footer">
+			<div id="saveDelBox">
+				<div id="trash" class="storageButton"><i class="fas fa-trash"></i></div>
+				<div id="save" class="storageButton"><i class="fas fa-save"></i></div>
+			</div>
+			<div id="addButton" onclick="addTodoUnit()">
+				<i class="fas fa-plus"></i>
+			</div>
+		</div>
+		<div id="footerSheet"></div>
     <script src="sample.js" charset="utf-8"></script>
   </body>
 </html>
