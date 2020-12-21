@@ -13,7 +13,7 @@
 			"sizes": "192x192",
 			"type": "image/png"
 	}],
-	"start_url": "https://yoshinari510.github.io/ToDList/",
+	"start_url": "https://yoshinari510.github.io/ToDoList/",
 	"display": "standalone",
 	"orientation":"portrait"
 }
