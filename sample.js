@@ -5,6 +5,7 @@ dayTxt = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 let button = document.querySelector('#addButton');
 const trashButton = document.querySelector('#trash');
 const saveButton = document.querySelector('#save');
+let firstLoad = true;
 let column = {}; //columnを入れるためのオブジェクト、インデックスはnumber（1スタート）
 let outer = {};
 let input = {};
@@ -15,6 +16,7 @@ let recovered = Boolean(window.localStorage.getItem('recovered'));  //保存デ�
 let currentFocusUnit = null;
 let dateMonthSpan = null;
 let dateDateSpan = null;
+let colorNumber = 0;	//テーマ色を指定する変数。0=blue, 1=white
 let orderArray = []; //現在存在するユニットを数えるための配列。要素はnumber。addでspliceで追加。deleteしたらそのnumberの要素をspliceで削除して詰める。lengthが現在存在するユニットの総数
 let unitBox = {}; //ユニットのデータのインスタンス用のオブジェクト。インデックスは親要素のID名（todoUnit${number}）
 let unitBoxArray = [];  //unitBoxを保存するための配列
@@ -27,20 +29,34 @@ class unitData {
    }
 }
 
+//色のセットを作るためのクラス
+class pallet {
+	constructor(lightColor, bgColor, bgColor2, shadowColor, txtColor, txtColor2, checkColor, checkColor2) {
+		this.lightColor  = lightColor;
+		this.bgColor     = bgColor;
+		this.bgColor2    = bgColor2;
+		this.shadowColor = shadowColor;
+		this.txtColor    = txtColor;
+		this.txtColor2   = txtColor2;
+		this.checkColor  = checkColor;
+		this.checkColor2 = checkColor2;
+	}
+}
+//青色用のインスタンス
+const blue  = new pallet('hsl(208, 75%, 90%)',  'hsl(208, 75%, 80%)', 'hsl(208, 75%, 77%)', 'hsl(208, 75%, 70%)', 'hsl(221, 10%, 18%)', 'hsl(221, 10%, 55%)', 'hsl(208, 97%, 97%)', 'hsl(208, 55%, 65%)');
+const white = new pallet('hsl(240, 19%, 100%)', 'hsl(217, 23%, 93%)', 'hsl(217, 23%, 90%)', 'hsl(219, 25%, 80%)', 'hsl(221, 10%, 18%)', 'hsl(221, 10%, 55%)', 'hsl(217, 23%, 50%)', 'hsl(217, 23%, 80%)');
+const green = new pallet('hsl(120, 76%, 89%)',  'hsl(120, 75%, 80%)', 'hsl(120, 75%, 77%)', 'hsl(120, 75%, 70%)', 'hsl(221, 10%, 18%)', 'hsl(221, 10%, 55%)', 'hsl(208, 97%, 97%)', 'hsl(120, 55%, 65%)');
+
 //色のセット
-const lightColor  = 'hsl(208, 75%, 90%)';
-const bgColor     = 'hsl(208, 75%, 80%)';
-const shadowColor = 'hsl(208, 75%, 70%)';
-const txtColor = 'hsl(221, 10%, 18%)';
-const checkColor = 'hsl(208, 97%, 97%)';
-const checkColor2 = 'hsl(208, 55%, 65%)';
-const txtColor2 = 'hsl(221, 10%, 55%)';
+const colorSet = [blue, white, green];
+
+document.querySelector('body').style.backgroundColor = colorSet[colorNumber].bgColor;
 
 //Neumorphism用のシャドウを返す関数
-let convex = (offset, blur =offset*2 , light = lightColor, shadow = shadowColor) => {
+let convex = (offset, blur =offset*2 , light = colorSet[colorNumber].lightColor, shadow = colorSet[colorNumber].shadowColor) => {
 	return `${offset}px ${offset}px ${blur}px ${shadow}, -${offset}px -${offset}px ${blur}px ${light}, inset ${offset}px ${offset}px ${blur}px hsla(208, 75%, 70%, 0), inset -${offset}px -${offset}px ${blur}px hsla(208, 75%, 70%, 0)`;
 };
-let dent = (offset, blur =offset*2 , light = lightColor, shadow = shadowColor) => {
+let dent = (offset, blur =offset*2 , light = colorSet[colorNumber].lightColor, shadow = colorSet[colorNumber].shadowColor) => {
 	return `inset ${offset}px ${offset}px ${blur}px ${shadow}, inset -${offset}px -${offset}px ${blur}px ${light}, ${offset}px ${offset}px ${blur}px hsla(208, 75%, 70%, 0), -${offset}px -${offset}px ${blur}px hsla(208, 75%, 70%, 0)`;
 };
 
@@ -73,6 +89,7 @@ let showDate = () => {
     let virtualDay = dayTxt[virtualDate.getDay()];
     let daySpan = document.querySelector('#day')
     daySpan.innerHTML = '&nbsp;' + virtualDay;
+		save();
   };
 	//enter to change
 	let enterchangeDay = (e) => {
@@ -123,6 +140,7 @@ let showDate = () => {
     unitBox[`todoUnit${1}`] = new unitData();
     number = 2;
   }
+	setTimeout( () => firstLoad = false, 1200);
 };
 
 let focusWatch = () => {
@@ -140,6 +158,7 @@ let deldel = () => {
 	del.style.transitionTimingFunction= 'ease-in';
 	del.style.opacity = 0;
 	setTimeout( () => del.style.visibility = 'hidden' , 250);	//focusoutしたらそのcolumnのdelを非表示
+	save();
 };
 
 let openMenu = () => {
@@ -166,38 +185,45 @@ let addTodoUnit = (e) => {
 	addedUnit.style.opacity = 0;
 	setTimeout( () => addedUnit.style.opacity = 1, 10);
 	number++
+	if (!firstLoad) {
+		save();
+	}
 };
 
 let delUnit = (x) => {
-    let targetParent = document.querySelector('#container');
-    let target = document.querySelector(`#todoUnit${x}`)
-    targetParent.removeChild(target);
-    currentFocusUnit = null;
-    let index = orderArray.findIndex(item => item === x);
-    orderArray.splice(index,1);
+  let targetParent = document.querySelector('#container');
+  let target = document.querySelector(`#todoUnit${x}`)
+  targetParent.removeChild(target);
+  currentFocusUnit = null;
+  let index = orderArray.findIndex(item => item === x);
+  orderArray.splice(index,1);
+	save();
 };
 
 let check = (c) => {
   let checkMark = document.querySelector(`#check${c}`);
   if (doneJudge[c]) {
     column[c].style.textDecoration = 'line-through';
-		column[c].style.color = txtColor2;
+		column[c].style.color = colorSet[colorNumber].txtColor2;
 		outer[c].style.boxShadow = dent(3);
-		outer[c].style.backgroundColor = 'hsl(207, 75%, 77%)';	//-3%
-		checkMark.style.backgroundColor = 'hsl(207, 75%, 77%)';	//-3%
-		checkMark.style.color = checkColor2;
+		outer[c].style.backgroundColor = colorSet[colorNumber].bgColor2;
+		checkMark.style.backgroundColor = colorSet[colorNumber].bgColor2;
+		checkMark.style.color = colorSet[colorNumber].checkColor2;
 		checkMark.style.boxShadow = dent(3);
     doneJudge[c] = !doneJudge[c];
   }else{
     column[c].style.textDecoration = 'none';
-    column[c].style.color = txtColor;
+    column[c].style.color = colorSet[colorNumber].txtColor;
 		outer[c].style.boxShadow = convex(3);
-		outer[c].style.backgroundColor = 'hsl(207, 75%, 80%)';
-		checkMark.style.backgroundColor = 'hsl(206, 74%, 80%)';
-		checkMark.style.color = checkColor;
+		outer[c].style.backgroundColor = colorSet[colorNumber].bgColor;
+		checkMark.style.backgroundColor = colorSet[colorNumber].bgColor;
+		checkMark.style.color = colorSet[colorNumber].checkColor;
 		checkMark.style.boxShadow = convex(3);
     doneJudge[c] = !doneJudge[c];
   }
+	if (!firstLoad) {
+		save();
+	}
 };
 
 let timeDisplayFunc = (d) => {
@@ -205,6 +231,9 @@ let timeDisplayFunc = (d) => {
 		document.querySelector('#timeStartBox').querySelector('span').innerHTML = document.querySelector('#timeStart').value;
 	} else {
 		document.querySelector(`#timeDisplay${d}`).innerHTML = document.querySelector(`#input${d}`).value;
+	}
+	if (!firstLoad) {
+		save();
 	}
 };
 
@@ -244,22 +273,26 @@ let save = (event) => {
   window.localStorage.setItem('objects',JSON.stringify(unitBoxArray));
   window.localStorage.setItem('orderArray',JSON.stringify(orderArray));
   window.localStorage.setItem('recovered', 'true');
-  if (!recovered) {
+//	saved();
+	if (!recovered) {
     recovered = !recovered
   }
-  const saved = document.querySelector('#saved');
+};
+
+let saved = () => {
+	const saved = document.querySelector('#saved');
 	const savedTxt = saved.querySelector('div');
   saved.style.transitionTimingFunction = 'ease-out';
 	saved.style.boxShadow = convex(2);
-	saved.querySelector('div').style.backgroundColor = 'hsl(208, 75%, 84%)';
+	saved.querySelector('div').style.backgroundColor = colorSet[colorNumber].bgColor;
 	savedTxt.style.opacity = 1;
   setTimeout( () => {
     saved.style.transitionTimingFunction = 'ease-in';
 		saved.style.boxShadow = convex(2, 4, 'hsla(208, 75%, 70%, 0)', 'hsla(206, 74%, 90%, 0)');
-		saved.querySelector('div').style.backgroundColor = bgColor;
+		saved.querySelector('div').style.backgroundColor = colorSet[colorNumber].bgColor;
 		savedTxt.style.opacity = 0;
 	},1500);
 };
 
 trashButton.addEventListener("click",trash,false);
-saveButton.addEventListener("click",save,false);
+//saveButton.addEventListener("click",save,false);
